@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cstdio>
 #include <unistd.h>
+#include <cmath>
 using namespace std;
 
 template <typename T>
@@ -31,9 +32,52 @@ class CartesianCoord {
 
 typedef CartesianCoord<int> coord_t;
 
+double euclideanDistance(coord_t &a, const coord_t &b) {
+  return sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y));
+}
+
+void maxHeapify(vector<pair<coord_t*, double>> &v, int size, int i) {
+  int max = i;
+  int left = 2*i + 1;
+  int right = 2*i + 2;
+
+  if (left < size && v[left].second > v[max].second)
+    max = left;
+
+  if (right < size && v[right].second > v[max].second)
+    max = right;
+
+  if (max != i) {
+    swap(v[i], v[max]);
+    maxHeapify(v, size, max);
+  }
+}
+
+void heapSort(vector<pair<coord_t*, double>> &v) {
+  for (int i = v.size() / 2 - 1; i >= 0; i--)
+    maxHeapify(v, v.size(), i);
+
+  for (int i = v.size() - 1; i >= 0; i--) {
+    swap(v[0], v[i]);
+    maxHeapify(v, i, 0);
+  }
+}
+
 vector<coord_t> knn (int k, vector<coord_t> &points, const coord_t &q) {
+  vector<coord_t> result(k);
+  vector<pair<coord_t*, double>> dist;
+
+  for (auto &i : points) {
+    int distance = euclideanDistance(i, q);
+    dist.push_back(make_pair(&i, distance)); 
+  }
+
+  heapSort(dist);
   
-  return vector<coord_t>();
+  for (int i = 0; i < result.size(); ++i)
+    result[i] = *dist[i].first;
+
+  return result;
 }
 
 int main()
